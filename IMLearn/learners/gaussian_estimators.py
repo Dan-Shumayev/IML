@@ -7,6 +7,7 @@ class UnivariateGaussian:
     """
     Class for univariate Gaussian Distribution Estimator
     """
+
     def __init__(self, biased_var: bool = False) -> UnivariateGaussian:
         """
         Estimator for univariate Gaussian mean and variance parameters
@@ -51,7 +52,18 @@ class UnivariateGaussian:
         Sets `self.mu_`, `self.var_` attributes according to calculated estimation (where
         estimator is either biased or unbiased). Then sets `self.fitted_` attribute to `True`
         """
-        raise NotImplementedError()
+
+        # raise NotImplementedError() # TODO - why is that?
+
+        m = X.shape[0]
+        self.mu_ = np.mean(X, axis=None)
+
+        centered_sample = np.power(X - self.mu_, 2)
+
+        if self.biased_:
+            self.var_ = centered_sample / m
+        else:
+            self.var_ = centered_sample / (m - 1)
 
         self.fitted_ = True
         return self
@@ -75,7 +87,9 @@ class UnivariateGaussian:
         ValueError: In case function was called prior fitting the model
         """
         if not self.fitted_:
-            raise ValueError("Estimator must first be fitted before calling `pdf` function")
+            raise ValueError(
+                "Estimator must first be fitted before calling `pdf` function"
+            )
         raise NotImplementedError()
 
     @staticmethod
@@ -104,6 +118,7 @@ class MultivariateGaussian:
     """
     Class for multivariate Gaussian Distribution Estimator
     """
+
     def __init__(self):
         """
         Initialize an instance of multivariate Gaussian estimator
@@ -167,7 +182,9 @@ class MultivariateGaussian:
         ValueError: In case function was called prior fitting the model
         """
         if not self.fitted_:
-            raise ValueError("Estimator must first be fitted before calling `pdf` function")
+            raise ValueError(
+                "Estimator must first be fitted before calling `pdf` function"
+            )
         raise NotImplementedError()
 
     @staticmethod
