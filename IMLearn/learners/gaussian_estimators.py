@@ -1,7 +1,7 @@
 from __future__ import annotations
+
 import numpy as np
-from numpy.linalg import inv, det, slogdet
-from scipy.stats import norm as norm_dis
+from numpy.linalg import det, inv, slogdet
 
 
 class UnivariateGaussian:
@@ -58,12 +58,12 @@ class UnivariateGaussian:
 
         self.mu_ = np.mean(X, axis=None)
 
-        centered_sample = np.power(X - self.mu_, 2)
+        centered_sample_squared = np.sum(np.power(X - self.mu_, 2))
 
         if self.biased_:
-            self.var_ = centered_sample / m
+            self.var_ = centered_sample_squared / m
         else:
-            self.var_ = centered_sample / (m - 1)
+            self.var_ = centered_sample_squared / (m - 1)
 
         self.fitted_ = True
         return self
@@ -91,10 +91,10 @@ class UnivariateGaussian:
                 "Estimator must first be fitted before calling `pdf` function"
             )
 
-        nom = np.exp(-1 * np.power(X - self.mu_, 2) / (2 * self.var_))
+        numer = np.exp(-1 * np.power(X - self.mu_, 2) / (2 * self.var_))
         denom = (2 * np.pi * self.var_) ** 0.5
 
-        return nom / denom
+        return numer / denom
 
     @staticmethod
     def log_likelihood(mu: float, sigma: float, X: np.ndarray) -> float:
@@ -115,7 +115,17 @@ class UnivariateGaussian:
         log_likelihood: float
             log-likelihood calculated
         """
-        raise NotImplementedError()
+        from math import log
+
+        m = X.shape[0]
+        centered_sample = X - mu
+
+        log_numer = np.exp(
+            (-1 / np.power(2 * sigma, 2)) * np.sum(np.power(centered_sample, 2))
+        )
+        log_denom = np.power(2 * np.pi * sigma, m / 2)
+
+        return log(log_numer / log_denom)
 
 
 class MultivariateGaussian:
