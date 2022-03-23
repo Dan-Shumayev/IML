@@ -1,9 +1,10 @@
 import sys
 
 sys.path.append("C:\\Users\\fserv\\Downloads\\Year 4\\Semester B\\IML\\IML-Projects")
+# TODO - remove sys and resolve Module not found issue
 
 import numpy as np
-import plotly.graph_objects as go
+import plotly.express as px
 import plotly.io as pio
 from IMLearn.learners import MultivariateGaussian, UnivariateGaussian
 
@@ -17,12 +18,16 @@ def test_univariate_gaussian():
 
     print(f"({univar_gaussian_est.mu_}, {univar_gaussian_est.var_})")
 
-    return
     # Question 2 - Empirically showing sample mean is consistent
-    raise NotImplementedError()
+    ys = list()
+    for i in range(10, 1001, 10):
+        ys.append(abs(UnivariateGaussian().fit(s[:i]).mu_ - 10))
+
+    fig = px.bar(x=range(10, 1001, 10), y=ys, labels={'x':'Sample size', 'y':'Mean deviation'})
+    fig.show()
 
     # Question 3 - Plotting Empirical PDF of fitted model
-    raise NotImplementedError()
+    # raise NotImplementedError()
 
 
 def test_multivariate_gaussian():
