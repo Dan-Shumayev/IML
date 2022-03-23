@@ -19,14 +19,15 @@ def test_univariate_gaussian():
     print(f"({univar_gaussian_est.mu_}, {univar_gaussian_est.var_})")
 
     # Question 2 - Empirically showing sample mean is consistent
-    ys = list()
+    empirical_means = list()
     for i in range(10, 1001, 10):
-        ys.append(abs(UnivariateGaussian().fit(s[:i]).mu_ - 10))
+        empirical_means.append(abs(UnivariateGaussian().fit(s[:i]).mu_ - 10))
 
-    px.bar(x=range(10, 1001, 10), y=ys, labels={'x':'Sample size', 'y':'Mean deviation'}, title="Mean deviation as a function of sample size").show()
+    px.bar(x=range(10, 1001, 10), y=empirical_means, labels={'x':'Sample size', 'y':'Mean deviation'}, title="Mean deviation as a function of sample size").show()
 
     # Question 3 - Plotting Empirical PDF of fitted model
-    pass
+    # TODO - question: what's expected to see in the plot?
+    px.scatter(x=s, y=univar_gaussian_est.pdf(s), labels={'x':'Sample value', 'y':'PDF'}, title="PDF as a function of sample value").show()
 
 def test_multivariate_gaussian():
     # Question 4 - Draw samples and print fitted model
