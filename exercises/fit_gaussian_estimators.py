@@ -23,12 +23,10 @@ def test_univariate_gaussian():
     for i in range(10, 1001, 10):
         ys.append(abs(UnivariateGaussian().fit(s[:i]).mu_ - 10))
 
-    fig = px.bar(x=range(10, 1001, 10), y=ys, labels={'x':'Sample size', 'y':'Mean deviation'})
-    fig.show()
+    px.bar(x=range(10, 1001, 10), y=ys, labels={'x':'Sample size', 'y':'Mean deviation'}, title="Mean deviation as a function of sample size").show()
 
     # Question 3 - Plotting Empirical PDF of fitted model
-    # raise NotImplementedError()
-
+    pass
 
 def test_multivariate_gaussian():
     # Question 4 - Draw samples and print fitted model
