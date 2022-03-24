@@ -200,7 +200,18 @@ class MultivariateGaussian:
             raise ValueError(
                 "Estimator must first be fitted before calling `pdf` function"
             )
-        raise NotImplementedError()
+
+        d = self.mu_.shape[0]
+
+        assert(d == self.cov_.shape[0]), "Cov and mu share the same dimension as the number of samples"
+        assert(d == X.shape[0]), "mu and X have the same dimension"
+        assert(self.cov_.shape[0] == self.cov_.shape[1]), "Covariance is square"
+
+        X_centered = X - self.mu_
+        numer = np.exp(-0.5 * np.matmul(X_centered.T, np.matmul(inv(self.cov_), X_centered)))
+        denom = np.power(2 * np.pi, d/2) * np.power(det(self.cov_), 0.5)
+        
+        return numer / denom
 
     @staticmethod
     def log_likelihood(mu: np.ndarray, cov: np.ndarray, X: np.ndarray) -> float:
@@ -221,4 +232,4 @@ class MultivariateGaussian:
         log_likelihood: float
             log-likelihood calculated over all input data and under given parameters of Gaussian
         """
-        raise NotImplementedError()
+        pass
