@@ -121,7 +121,7 @@ class UnivariateGaussian:
         centered_sample = X - mu
 
         log_numer = np.exp(
-            (-1 / np.power(2 * sigma, 2)) * np.sum(np.power(centered_sample, 2))
+            (-1 / 2 * sigma ** 2) * np.sum(np.power(centered_sample, 2))
         )
         log_denom = np.power(2 * np.pi * sigma, m / 2)
 
@@ -208,7 +208,7 @@ class MultivariateGaussian:
         assert(self.cov_.shape[0] == self.cov_.shape[1]), "Covariance is square"
 
         X_centered = X - self.mu_
-        numer = np.exp(-0.5 * np.dot(X_centered.T, np.dot(inv(self.cov_), X_centered)).flatten())
+        numer = np.exp(-0.5 * np.matmul(X_centered.T, np.matmul(inv(self.cov_), X_centered)))
         denom = ((2 * np.pi) ** d/2) * (det(self.cov_) ** 0.5)
         
         return numer / denom
