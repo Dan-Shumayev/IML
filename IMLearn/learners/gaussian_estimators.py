@@ -120,12 +120,10 @@ class UnivariateGaussian:
         m = X.shape[0]
         centered_sample = X - mu
 
-        log_numer = np.exp(
-            (-1 / 2 * sigma ** 2) * np.sum(np.power(centered_sample, 2))
-        )
-        log_denom = np.power(2 * np.pi * sigma, m / 2)
+        term_1 = -m/2 * log(2 * np.pi * sigma)
+        term_2 = -1/(2 * sigma) * np.sum(np.power(centered_sample, 2))
 
-        return log(log_numer / log_denom)
+        return term_1 + term_2
 
 
 class MultivariateGaussian:
