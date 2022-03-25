@@ -170,8 +170,8 @@ class MultivariateGaussian:
         Sets `self.mu_`, `self.cov_` attributes according to calculated estimation.
         Then sets `self.fitted_` attribute to `True`
         """
-        self.mu_ = np.apply_along_axis(lambda uni_est: np.mean(uni_est), 1, X)
-        self.cov_ = np.cov(X)
+        self.mu_ = np.apply_along_axis(lambda uni_est: np.mean(uni_est), 0, X)
+        self.cov_ = np.cov(X.T)
 
         self.fitted_ = True
         return self
@@ -202,11 +202,10 @@ class MultivariateGaussian:
         d = self.mu_.shape[0]
 
         assert(d == self.cov_.shape[0]), "Cov and mu share the same dimension as the number of samples"
-        assert(d == X.shape[0]), "mu and X must have the same dimension"
         assert(self.cov_.shape[0] == self.cov_.shape[1]), "Covariance is square"
 
         X_centered = X - self.mu_
-        numer = np.exp(-0.5 * np.matmul(X_centered.T, np.matmul(inv(self.cov_), X_centered)))
+        numer = np.exp(-0.5 * np.matmul(X_centered, np.matmul(inv(self.cov_), X_centered.T)))
         denom = ((2 * np.pi) ** d/2) * (det(self.cov_) ** 0.5)
         
         return numer / denom
