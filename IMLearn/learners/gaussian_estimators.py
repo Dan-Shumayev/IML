@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from os import X_OK
+
 import numpy as np
 from numpy.linalg import det, inv, slogdet
 
@@ -229,4 +231,14 @@ class MultivariateGaussian:
         log_likelihood: float
             log-likelihood calculated over all input data and under given parameters of Gaussian
         """
-        pass
+        n_samples = X.shape[0]
+        n_features = X.shape[1]
+
+        def calc_sum_term_in_loglikelihood(x_j):
+            return -0.5 * x_j.T.dot(inv(cov)).dot(x_j)
+
+        X_centered = X - mu
+        term_1 = (-n_samples/2) * (n_features * np.log(2 * np.pi) + slogdet(cov)[1])
+        term_2 = np.sum(np.apply_along_axis(calc_sum_term_in_loglikelihood, 1, X_centered))
+
+        return term_1 + term_2
