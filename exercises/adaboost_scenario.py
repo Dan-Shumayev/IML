@@ -45,22 +45,49 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000, test_size=
     (train_X, train_y), (test_X, test_y) = generate_data(train_size, noise), generate_data(test_size, noise)
 
     # Question 1: Train- and test errors of AdaBoost in noiseless case
-    train_X, train_y = generate_data(train_size, noise_ratio)
-    test_X, test_y = generate_data(test_size, noise_ratio)
-
     adaboost_fitted_stump = AdaBoost(DecisionStump, n_learners)
-    adaboost_fitted_stump._fit(train_X, train_y)
+    adaboost_fitted_stump.fit(train_X, train_y)
 
-    train_error = test_error = np.zeros(n_learners)
+    train_error, test_error = np.zeros(n_learners), np.zeros(n_learners)
 
-    for t in range(1, n_learners):
-        train_error[t] = adaboost_fitted_stump.partial_loss(train_X, train_y, t)
-        test_error[t] = adaboost_fitted_stump.partial_loss(test_X, test_y, t)
+    for t in range(n_learners):
+        train_error[t] = adaboost_fitted_stump.partial_loss(train_X, train_y, t + 1)
+        test_error[t] = adaboost_fitted_stump.partial_loss(test_X, test_y, t + 1)
 
-    plot = go.Figure()
-    plot.add_trace(go.Scatter(x=np.arange(n_learners), y=train_error, name="Train error"))
-    plot.add_trace(go.Scatter(x=np.arange(n_learners), y=test_error, name="Test error"))
+    plot = make_subplots(rows=1, cols=1)
+    plot.add_trace(go.Scatter(x=np.arange(n_learners), y=train_error, mode='lines', marker_color="black", name="Train error"))
+    plot.add_trace(go.Scatter(x=np.arange(n_learners), y=test_error, mode='lines', marker_color="yellow", name="Test error"))
+    plot.update_layout(height=600, width=1000,
+                              title_text=f"Training- and test- errors as function of #boosted fitted learners "
+                                         "with noise = %.1f" % noise,
+                              xaxis_title="#Fitted learners",
+                              yaxis_title="Normalized Misclassification Error")
     plot.show()
+
+    # adaboost = AdaBoost(DecisionStump, n_learners)
+    # adaboost.fit(train_X, train_y)
+    # iterations_num = np.linspace(1, 250, 250).astype(np.int_)
+    # training_errors = np.ones(250, dtype=float)
+    # test_errors = np.ones(250, dtype=float)
+
+    # for t in iterations_num:
+    #     training_errors[t-1] = adaboost.partial_loss(train_X, train_y, t)
+    #     test_errors[t-1] = adaboost.partial_loss(test_X, test_y, t)
+
+    # fig_q1 = make_subplots(rows=1, cols=1)
+    # fig_q1.add_trace(
+    #     go.Scatter(x=iterations_num, y=training_errors, mode='lines', marker_color="blue", name="Training error")
+    # )
+    # fig_q1.add_trace(
+    #     go.Scatter(x=iterations_num, y=test_errors, mode='lines', marker_color="orange", name="Test error")
+    # )
+
+    # fig_q1.update_layout(height=600, width=1000,
+    #                           title_text="ADABOOST: training and test errors as function number of fitted learners "
+    #                                      "(Noise = %.1f)" % noise,
+    #                           xaxis_title="Number of fitted learners",
+    #                           yaxis_title="Mis-classification Error (Normalized)")
+    # fig_q1.show()
 
     # Question 2: Plotting decision surfaces
     # T = [5, 50, 100, 250]
