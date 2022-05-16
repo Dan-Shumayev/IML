@@ -1,3 +1,4 @@
+.mypy*
 *not_mine*
 School solutions/
 mypy.*

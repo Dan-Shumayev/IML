@@ -8,8 +8,10 @@ BaseEstimator.py file
 # License: BSD 3 clause
 """
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from typing import NoReturn
+
 import numpy as np
 
 
@@ -18,7 +20,7 @@ class BaseEstimator(ABC):
     Base class of supervised estimators (classifiers and regressors)
     """
 
-    def __init__(self) -> BaseEstimator:
+    def __init__(self) -> None:
         """
         Initialize a supervised estimator instance
 
@@ -100,7 +102,7 @@ class BaseEstimator(ABC):
         return self._loss(X, y)
 
     @abstractmethod
-    def _fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
+    def _fit(self, X: np.ndarray, y: np.ndarray) -> None:
         """
         Fit estimator for given input samples and responses
 
