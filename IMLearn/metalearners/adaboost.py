@@ -51,20 +51,21 @@ class AdaBoost(BaseEstimator):
         y : ndarray of shape (n_samples, )
             Responses of input data to fit to
         """
-        self.models_ = list()
-        self.weights_ = list()
-        learner = self.wl_()
+        # TODO - understand it!
 
-        m = y.shape[0]
+        self.models_ = list()
+        self.weights_ = np.zeros(self.iterations_)
+
+        m = X.shape[0]
         self.D_ = np.zeros((self.iterations_, m))  # Weights to be updated by AdaBoost
         self.D_[0, :] = np.ones(m) / m  # Initial distri. is uniform
 
         for t in range(self.iterations_):
-            self.models_.append(learner)
+            self.models_.append(self.wl_())
             t_prediction = self.models_[t].fit(X, self.D_[t, :] * y).predict(X)
 
             epsilon = np.sum(self.D_[t, :] * (1 - (y == t_prediction)))
-            self.weights_.append(0.5 * np.log(1.0 / epsilon - 1))
+            self.weights_[t] = 0.5 * np.log(1.0 / epsilon - 1)
 
             if t < self.iterations_ - 1:
                 self.D_[t+1, :] = self.D_[t, :] * np.exp(-self.weights_[t] * y * t_prediction)
@@ -122,8 +123,6 @@ class AdaBoost(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        assert self.weights_, "Must be defined!"
-
         y_hat = np.zeros(X.shape[0])
 
         T_weights = self.weights_[:T]

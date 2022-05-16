@@ -76,8 +76,6 @@ class DecisionStump(BaseEstimator):
         Feature values strictly below threshold are predicted as `-sign` whereas values which equal
         to or above the threshold are predicted as `sign`
         """
-        assert self.sign_, "Must be defined!"
-
         res = list()
         for x in X[:, self.j_]:
             res.append(self.sign_) if x >= self.threshold_ else res.append(-self.sign_)
