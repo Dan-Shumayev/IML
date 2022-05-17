@@ -112,23 +112,19 @@ class DecisionStump(BaseEstimator):
         For every tested threshold, values strictly below threshold are predicted as `-sign` whereas values
         which equal to or above the threshold are predicted as `sign`
         """
-        # TODO - understand it!
-
         m = values.shape[0]
 
         labels_to_values = np.zeros((2, m))
         labels_to_values[0, :], labels_to_values[1, :] = labels, values
         # Sort it so that we can iterate over the thresholds in O(N)
         labels_to_values = labels_to_values[:, labels_to_values[1, :].argsort()]
-        threshold = labels_to_values[1, 0]
 
         curr_error = min_error = np.sum(np.abs(labels_to_values[0, :]) * (1 - (sign * np.ones(m) == np.sign(labels_to_values[0, :]))))
+        threshold = labels_to_values[1, 0]
 
         for ix in range(m):
-            if np.sign(labels_to_values[0, ix]) == sign:
-                curr_error += np.abs(labels_to_values[0, ix])
-            else:
-                curr_error -= np.abs(labels_to_values[0, ix])
+            curr_feature_vec = labels_to_values[0, ix]
+            curr_error += np.abs(curr_feature_vec) if np.sign(curr_feature_vec) == sign else -np.abs(curr_feature_vec)
 
             if curr_error < min_error:
                 min_error = curr_error

@@ -51,8 +51,6 @@ class AdaBoost(BaseEstimator):
         y : ndarray of shape (n_samples, )
             Responses of input data to fit to
         """
-        # TODO - understand it!
-
         self.models_ = list()
         self.weights_ = np.zeros(self.iterations_)
 
