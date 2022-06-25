@@ -1,8 +1,11 @@
 from __future__ import annotations
+
 from typing import NoReturn
+
+import numpy as np
+
 from ...base import BaseEstimator, BaseModule
 from ...desent_methods.gradient_descent import GradientDescent
-import numpy as np
 
 
 class LassoObjective(BaseModule):
