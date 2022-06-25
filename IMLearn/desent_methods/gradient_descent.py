@@ -1,8 +1,10 @@
 from __future__ import annotations
-from typing import Callable, NoReturn
-import numpy as np
 
-from IMLearn.base import BaseModule, BaseLR
+from typing import Callable, NoReturn
+
+import numpy as np
+from IMLearn.base import BaseLR, BaseModule
+
 from .learning_rate import FixedLR
 
 OUTPUT_VECTOR_TYPE = ["last", "best", "average"]
@@ -19,11 +21,12 @@ class GradientDescent:
     Attributes:
     -----------
     learning_rate_: BaseLR
-        Learning rate strategy for retrieving the learning rate at each iteration t of the algorithm
+        Learning rate strategy for retrieving the learning rate at each iteration t 
+        of the algorithm
 
     tol_: float
-        The stopping criterion. Training stops when the Euclidean norm of w^(t)-w^(t-1) is less than
-        specified tolerance
+        The stopping criterion. Training stops when the Euclidean norm of w^(t)-w^(t-1) 
+        is less than specified tolerance
 
     max_iter_: int
         The maximum number of GD iterations to be performed before stopping training
@@ -35,9 +38,10 @@ class GradientDescent:
             - `average`: returns the average point over the GD iterations
 
     callback_: Callable[[...], None], default=default_callback
-        A callable function to be called after each update of the model while fitting to given data.
-        Callable function receives as input any argument relevant for the current GD iteration. Arguments
-        are specified in the `GradientDescent.fit` function
+        A callable function to be called after each update of the model while 
+        fitting to given data.
+        Callable function receives as input any argument relevant for the 
+        current GD iteration. Arguments are specified in the `GradientDescent.fit` function
     """
     def __init__(self,
                  learning_rate: BaseLR = FixedLR(1e-3),
