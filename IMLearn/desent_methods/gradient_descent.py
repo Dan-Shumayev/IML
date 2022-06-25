@@ -41,7 +41,8 @@ class GradientDescent:
         A callable function to be called after each update of the model while 
         fitting to given data.
         Callable function receives as input any argument relevant for the 
-        current GD iteration. Arguments are specified in the `GradientDescent.fit` function
+        current GD iteration. 
+        Arguments are specified in the `GradientDescent.fit` function.
     """
     def __init__(self,
                  learning_rate: BaseLR = FixedLR(1e-3),
