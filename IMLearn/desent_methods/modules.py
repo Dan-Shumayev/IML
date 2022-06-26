@@ -78,7 +78,7 @@ class L1(BaseModule):
         output: ndarray of shape (1,)
             Value of function at point self.weights
         """
-        np.linalg.norm(self.weights_, ord=1)
+        return np.sum(np.abs(self.weights_))
 
     def compute_jacobian(self, **kwargs) -> np.ndarray:
         """
@@ -211,8 +211,9 @@ class RegularizedModule(BaseModule):
         output: ndarray of shape (1,)
             Value of function at point self.weights
         """
-        return self.fidelity_module_.compute_output(**kwargs) + \
-            self.lam_ * self.regularization_module_.compute_output(**kwargs)
+        fidelity_output = self.fidelity_module_.compute_output(**kwargs)
+        regularization_output = self.regularization_module_.compute_output(**kwargs)
+        return fidelity_output + self.lam_ * regularization_output
 
     def compute_jacobian(self, **kwargs) -> np.ndarray:
         """
@@ -228,11 +229,12 @@ class RegularizedModule(BaseModule):
         output: ndarray of shape (n_in,)
             Derivative with respect to self.weights at point self.weights
         """
-        partial_jacob = np.insert(np.asmatrix(self.regularization_module_. \
-                compute_jacobian(**kwargs)), 0, 0,axis=1) if self.include_intercept_ else \
-                    self.regularization_module_.compute_jacobian(**kwargs)
+        fidelity_jacobian = self.fidelity_module_.compute_jacobian(**kwargs)
+        regularization_jacobian = self.regularization_module_.compute_jacobian(**kwargs)
+        if self.include_intercept_:
+            regularization_jacobian = np.insert(regularization_jacobian, 0, 0)
 
-        return self.lam_ * partial_jacob + self.fidelity_module_.compute_jacobian(**kwargs)
+        return fidelity_jacobian + self.lam_ * regularization_jacobian
 
     @property
     def weights(self):

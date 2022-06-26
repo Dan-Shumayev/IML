@@ -40,8 +40,7 @@ class ExponentialLR(FixedLR):
     """
     def __init__(self, base_lr: float, decay_rate: float):
         """
-        Instantiate an exponentially decaying learning-rate object, 
-        i.e. eta_t = eta * gamma^t
+        Instantiate an exponentially decaying learning-rate object, i.e. eta_t = eta*gamma^t
 
         Parameters:
         ----------
@@ -68,4 +67,4 @@ class ExponentialLR(FixedLR):
         eta_t: float
             Exponential decay according to eta_t = eta*gamma^t
         """
-        return self.base_lr * (self.decay_rate ** t)
+        return self.base_lr * np.power(self.decay_rate, t)
