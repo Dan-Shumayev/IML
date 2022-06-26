@@ -145,14 +145,15 @@ class GradientDescent:
             f.weights = w_t
             recorded_path.append(f.weights)
 
-            curr_step = np.linalg.norm(recorded_path[iteration_num + 1] - recorded_path[iteration_num])
+            curr_step = np.linalg.norm(recorded_path[iteration_num + 1] - \
+                recorded_path[iteration_num])
             curr_loss = f.compute_output(X=X, y=y)
             if curr_loss and min_loss and curr_loss < min_loss:
                 min_loss, best_arg = curr_loss, recorded_path[iteration_num + 1]
                 
             self.callback_(solver=self,
                            weight=f.weights_,
-                           val=curr_loss,
+                           val=curr_loss if not (curr_loss is None) else 0,
                            grad=f.compute_jacobian(X=X, y=y),
                            t=iteration_num,
                            eta=eta,

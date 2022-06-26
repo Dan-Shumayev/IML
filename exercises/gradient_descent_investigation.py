@@ -11,7 +11,10 @@ from IMLearn import BaseModule
 from IMLearn.desent_methods import ExponentialLR, FixedLR, GradientDescent
 from IMLearn.desent_methods.modules import L1, L2
 from IMLearn.learners.classifiers.logistic_regression import LogisticRegression
+from IMLearn.metrics.loss_functions import mean_square_error
+from IMLearn.model_selection.cross_validate import cross_validate
 from IMLearn.utils import split_train_test
+from sklearn.metrics import auc, mean_squared_error, roc_curve
 
 
 def plot_descent_path(module: Type[BaseModule],
@@ -107,7 +110,7 @@ def compare_fixed_learning_rates(init: np.ndarray = np.array([np.sqrt(2), np.e /
         l1_solver, l2_solver = GradientDescent(learning_rate=curr_eta, out_type=out_type, \
             callback=l1_callback), GradientDescent(learning_rate=curr_eta, \
                                                 out_type=out_type, callback=l2_callback)
-                                                
+
         # Fit these norms by gradient descent iterations (done by `fit`)
         lowest_loss_l1, lowest_loss_l2 = l1_solver.fit(f=l1_model, X=np.empty, y=np.empty), \
             l2_solver.fit(f=l2_model, X=np.empty, y=np.empty)
@@ -150,7 +153,7 @@ def compare_exponential_decay_rates(init: np.ndarray = np.array([np.sqrt(2), np.
         solver = GradientDescent(learning_rate=ExponentialLR(eta, gamma), \
             out_type=out_type, callback=callback)
 
-        best_value = solver.fit(L1(init), X=np.empty, y=np.empty)
+        best_value = solver.fit(L1(init), X=np.empty((0, 0)), y=np.empty(0))
         l1_norm = apply_l1_norm(best_value)
         min_lr, best_gamma = (l1_norm, gamma) if l1_norm < min_lr else (min_lr, best_gamma)
 
@@ -185,7 +188,7 @@ def compare_exponential_decay_rates(init: np.ndarray = np.array([np.sqrt(2), np.
     plot_descent_path(module=L2, descent_path=np.array(l2_weights),
                       title="L2-Norm Gradient Descent Path").show()
 
-def load_data(path: str = "../datasets/SAheart.data", train_portion: float = .8) -> \
+def load_data(path: str = "C:/Users/fserv/Downloads/Year 4/Semester B/IML/IML-Projects/datasets/SAheart.data", train_portion: float = .8) -> \
         Tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
     """
     Load South-Africa Heart Disease dataset and randomly split into a train- and test portion
@@ -220,17 +223,60 @@ def load_data(path: str = "../datasets/SAheart.data", train_portion: float = .8)
 def fit_logistic_regression():
     # Load and split SA Heard Disease dataset
     X_train, y_train, X_test, y_test = load_data()
+    X_train, y_train = X_train.to_numpy(), y_train.to_numpy()
+    X_test, y_test = X_test.to_numpy(), y_test.to_numpy()
+     
+    # Plotting convergence rate of logistic regression 
+    # over SA heart disease data
+    logistic_regression = LogisticRegression()
+    logistic_regression.fit(X=X_train, y=y_train)
+    predicted_y_prob = logistic_regression.predict_proba(X=X_test)
+    fpr, tpr, thresholds = roc_curve(y_test, predicted_y_prob)
 
-    # Plotting convergence rate of logistic regression over SA heart disease data
-    raise NotImplementedError()
+    go.Figure(
+        data=[go.Scatter(x=[0, 1], y=[0, 1], mode="lines", 
+        line=dict(color="black", dash='dash'),
+                         name="Random Class Assignment"),
+              go.Scatter(x=fpr, y=tpr, mode='markers+lines', 
+              text=thresholds, name="", showlegend=False, marker_size=4,
+                         marker_color="blue",
+                         hovertemplate="<b>Threshold:</b>%{text:.3f}<br>FPR: %{x:.3f}<br>TPR: %{y:.3f}")],
+        layout=go.Layout(title=rf"$\text{{ROC Curve Of Fitted Model - AUC}}={auc(fpr, tpr):.6f}$",
+                         xaxis=dict(title=r"$\text{False Positive Rate (FPR)}$"),
+                         yaxis=dict(title=r"$\text{True Positive Rate (TPR)}$"))
+    ).show()
 
-    # Fitting l1- and l2-regularized logistic regression models, 
+    # Best threshold of logistic regression and its respective test error
+    best_thresh = thresholds[np.argmax(tpr - fpr)]
+    logistic_regression = LogisticRegression(alpha=best_thresh)
+    logistic_regression.fit(X=X_train, y=y_train)
+    test_error = logistic_regression.loss(X=X_test, y=y_test)
+    print("Best threshold: %.3f\n leads to test error of logistic regression: %.3f\n" % \
+        (best_thresh, test_error))
+
+    # Fitting regularized L1-2 logistic regression models, 
     # using cross-validation to specify values of regularization parameter
-    raise NotImplementedError()
+    lambdas = [.001, .002, .005, .01, .02, .05, .1]
+    for penalty in ["l1", "l2"]:
+        validation_errs = np.zeros(len(lambdas), dtype=float)
+        for ix in range(len(lambdas)):
+            gradient_descent = GradientDescent(learning_rate=FixedLR(1e-4), max_iter=20000)
+            logistic_regression = LogisticRegression(solver=gradient_descent, penalty=penalty, lam=lambdas[ix])
+            validation_errs[ix] = cross_validate(logistic_regression, X_train, y_train, mean_squared_error)[1]
 
+        # Lambda value achieving the best (min) validation error
+        opt_lam = lambdas[np.argmin(validation_errs)]
+
+        # Fitting logistic regression model with the best lambda
+        logistic_regression = LogisticRegression(solver=gradient_descent, penalty=penalty, lam=opt_lam)
+        logistic_regression.fit(X=X_train, y=y_train)
+        test_error = logistic_regression.loss(X=X_test, y=y_test)
+        print("Logistic regression with %s regulation term:\nBest lambda value: %.3f\n"
+              "Test error with the best lambda: %.3f\n" % (penalty, opt_lam, test_error))
 
 if __name__ == '__main__':
     np.random.seed(0)
+
     compare_fixed_learning_rates()
     compare_exponential_decay_rates()
     fit_logistic_regression()
