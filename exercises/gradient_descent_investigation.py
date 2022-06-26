@@ -1,6 +1,9 @@
+import sys
+
+sys.path.append('C:\\Users\\fserv\\Downloads\\Year 4\\Semester B\\IML\\IML-Projects')
+
 from typing import Callable, List, Tuple, Type
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -79,8 +82,8 @@ def get_gd_state_recorder_callback() -> Tuple[Callable[[], None], List[np.ndarra
     """
     weights, losses = [], []
 
-    def callback(solver=None, weights=None, val=None, grad=None, t=None, eta=None, delta=None):
-        weights.append(weights)
+    def callback(solver=None, weight=None, val=None, grad=None, t=None, eta=None, delta=None):
+        weights.append(weight)
         losses.append(val)
 
     return callback, weights, losses
@@ -88,6 +91,8 @@ def get_gd_state_recorder_callback() -> Tuple[Callable[[], None], List[np.ndarra
 def compare_fixed_learning_rates(init: np.ndarray = np.array([np.sqrt(2), np.e / 3]),
                                  etas: Tuple[float] = (1, .1, .01, .001)):
     out_type = "best"
+
+    fig = go.Figure()
 
     for eta in etas:
         curr_eta = FixedLR(eta)
@@ -102,15 +107,18 @@ def compare_fixed_learning_rates(init: np.ndarray = np.array([np.sqrt(2), np.e /
         l1_solver, l2_solver = GradientDescent(learning_rate=curr_eta, out_type=out_type, \
             callback=l1_callback), GradientDescent(learning_rate=curr_eta, \
                                                 out_type=out_type, callback=l2_callback)
+                                                
         # Fit these norms by gradient descent iterations (done by `fit`)
-        lowest_loss_l1, lowest_loss_l2 = l1_solver.fit(f=l1_model, X=np.nan, y=np.nan), \
-            l2_solver.fit(f=l2_model, X=np.nan, y=np.nan)
+        lowest_loss_l1, lowest_loss_l2 = l1_solver.fit(f=l1_model, X=np.empty, y=np.empty), \
+            l2_solver.fit(f=l2_model, X=np.empty, y=np.empty)
         
         print(f"The Lowest Loss Obtained for the L1-norm for eta={eta} is {lowest_loss_l1}.\n")
         print(f"The Lowest Loss Obtained for the L2-norm for eta={eta} is {lowest_loss_l2}.\n")
 
-        plt.plot(l1_losses, label=f"L1-Norm recording with eta={eta}")
-        plt.plot(l2_losses, label=f"L2-Squared Norm recording with eta={eta}")
+        fig.add_trace(go.Scatter(x=l1_losses, y=np.arange(len(l1_losses)), \
+            text=f"L1-Norm recording with eta={eta}"))
+        fig.add_trace(go.Scatter(x=l2_losses, y=np.arange(len(l2_losses)), \
+            text=f"L2-Squared Norm recording with eta={eta}"))
         
         if eta == .01:
             plot_descent_path(module=L1,
@@ -120,8 +128,7 @@ def compare_fixed_learning_rates(init: np.ndarray = np.array([np.sqrt(2), np.e /
                               descent_path=np.array(l2_weights),
                               title="L2-norm Gradient Descent Path").show()
 
-    plt.legend()
-    plt.show()
+    fig.show()
 
 
 def compare_exponential_decay_rates(init: np.ndarray = np.array([np.sqrt(2), np.e / 3]),
@@ -129,14 +136,54 @@ def compare_exponential_decay_rates(init: np.ndarray = np.array([np.sqrt(2), np.
                                     gammas: Tuple[float] = (.9, .95, .99, 1)):
     # Optimize the L1 objective using different decay-rate values of 
     # the exponentially decaying learning rate
-    raise NotImplementedError()
+    fig = go.Figure()
+
+    apply_l1_norm = lambda lr: np.linalg.norm(lr, ord=1)
+
+    out_type="best"
+
+    best_gamma = .0
+    min_lr = float('inf')
+
+    for gamma in gammas:
+        callback, _ , losses = get_gd_state_recorder_callback()
+        solver = GradientDescent(learning_rate=ExponentialLR(eta, gamma), \
+            out_type=out_type, callback=callback)
+
+        best_value = solver.fit(L1(init), X=np.empty, y=np.empty)
+        l1_norm = apply_l1_norm(best_value)
+        min_lr, best_gamma = (l1_norm, gamma) if l1_norm < min_lr else (min_lr, best_gamma)
+
+        print(f"L1-norm achieves a loss of {best_value} with (eta={eta},gamma={gamma}).\n")
+
+        fig.add_trace(go.Scatter(x=losses, y=np.arange(len(losses)), \
+            text=f"Decay Learning-Rate for (eta={eta},gamma={gamma})"))
+
+    print(f"Lowest L1 loss={min_lr} achieved with (eta={eta},gamma={best_gamma}).\n")
 
     # Plot algorithm's convergence for the different values of gamma
-    raise NotImplementedError()
+    fig.update_layout(title_text="L1-Norm recording for Exponential Decaying Learning Rate")
+    fig.update_xaxes(title_text="Iteration Number")
+    fig.update_yaxes(title_text="Loss value")
+    fig.show()
 
     # Plot descent path for gamma=0.95
-    raise NotImplementedError()
+    l1_callback, l1_weights, _ = get_gd_state_recorder_callback()
+    l2_callback, l2_weights, _ = get_gd_state_recorder_callback()
 
+    gamma = .95
+    curr_eta = ExponentialLR(eta, gamma)
+
+    l1_solver, l2_solver = GradientDescent(learning_rate=curr_eta, callback=l1_callback, \
+        out_type=out_type),  GradientDescent(learning_rate=curr_eta, callback=l2_callback, \
+        out_type=out_type)
+    l1_solver.fit(f=L1(init), X=np.empty, y=np.empty)
+    l2_solver.fit(f=L2(init), X=np.empty, y=np.empty)
+
+    plot_descent_path(module=L1, descent_path=np.array(l1_weights),
+                      title="L1-Norm Gradient Descent Path").show()
+    plot_descent_path(module=L2, descent_path=np.array(l2_weights),
+                      title="L2-Norm Gradient Descent Path").show()
 
 def load_data(path: str = "../datasets/SAheart.data", train_portion: float = .8) -> \
         Tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:

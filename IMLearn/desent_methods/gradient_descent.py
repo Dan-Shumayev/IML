@@ -128,35 +128,30 @@ class GradientDescent:
                 Euclidean norm of w^(t)-w^(t-1)
 
         """
-        best_arg = f.weights
-        min_loss = f.compute_output(X=X, y=y)
-
         recorded_path = [f.weights]
+        best_arg = f.weights_
+        min_loss = f.compute_output(X=X, y=y)
 
         def compute_curr_step(eta: float) -> float:
             f.weights = recorded_path[iteration_num]
-            direction = - f.compute_jacobian(X=X, y=y)
+            direction = -f.compute_jacobian(X=X, y=y)
 
             return recorded_path[iteration_num] + eta * direction
         
-        def compute_curr_loss_and_arg(curr_loss):
-            f.weights = w_t
-            recorded_path.append(f.weights)
-
-            return curr_loss, recorded_path[iteration_num + 1] \
-                if curr_loss < min_loss else min_loss, best_arg
-
         for iteration_num in range(self.max_iter_):
             eta = self.learning_rate_.lr_step(t=iteration_num)
             w_t = compute_curr_step(eta)
 
-            curr_step = np.linalg.norm(recorded_path[iteration_num + 1] - \
-                recorded_path[iteration_num])
-            curr_loss = f.compute_output(X=X, y=y)
-            min_loss, best_arg = compute_curr_loss_and_arg(curr_loss)
+            f.weights = w_t
+            recorded_path.append(f.weights)
 
+            curr_step = np.linalg.norm(recorded_path[iteration_num + 1] - recorded_path[iteration_num])
+            curr_loss = f.compute_output(X=X, y=y)
+            if curr_loss and min_loss and curr_loss < min_loss:
+                min_loss, best_arg = curr_loss, recorded_path[iteration_num + 1]
+                
             self.callback_(solver=self,
-                           weights=f.weights,
+                           weight=f.weights_,
                            val=curr_loss,
                            grad=f.compute_jacobian(X=X, y=y),
                            t=iteration_num,
