@@ -83,7 +83,8 @@ class GradientDescent:
 
     def fit(self, f: BaseModule, X: np.ndarray, y: np.ndarray):
         """
-        Optimize module using Gradient Descent iterations over given input samples and responses
+        Optimize module using Gradient Descent iterations over given 
+        input samples and responses
 
         Parameters
         ----------
@@ -96,26 +97,29 @@ class GradientDescent:
 
         Returns
         -------
-        solution: ndarray of shape (n_features)
-            Obtained solution for module optimization, according to the specified self.out_type_
+        solution: ndarray of shape (n_features) 
+            Obtained solution for module optimization, 
+            according to the specified self.out_type_
 
         Notes
         -----
         - Optimization is performed as long as self.max_iter_ has not been reached and that
         Euclidean norm of w^(t)-w^(t-1) is more than the specified self.tol_
 
-        - At each iteration the learning rate is specified according to self.learning_rate_.lr_step
+        - At each iteration the learning rate is specified according to 
+            self.learning_rate_.lr_step
 
-        - At the end of each iteration the self.callback_ function is called passing self and the
-        following named arguments:
+        - At the end of each iteration the self.callback_ function is called 
+            passing self and the following named arguments:
             - solver: GradientDescent
                 self, the current instance of GradientDescent
             - weights: ndarray of shape specified by module's weights
                 Current weights of objective
             - val: ndarray of shape specified by module's compute_output function
                 Value of objective function at current point, over given data X, y
-            - grad:  ndarray of shape specified by module's compute_jacobian function
-                Module's jacobian with respect to the weights and at current point, over given data X,y
+            - grad: ndarray of shape specified by module's compute_jacobian function
+                Module's jacobian with respect to the weights and at current point, 
+                over given data (X,y)
             - t: int
                 Current GD iteration
             - eta: float
@@ -124,4 +128,47 @@ class GradientDescent:
                 Euclidean norm of w^(t)-w^(t-1)
 
         """
-        raise NotImplementedError()
+        best_arg = f.weights
+        min_loss = f.compute_output(X=X, y=y)
+
+        recorded_path = [f.weights]
+
+        def compute_curr_step(eta: float) -> float:
+            f.weights = recorded_path[iteration_num]
+            direction = - f.compute_jacobian(X=X, y=y)
+
+            return recorded_path[iteration_num] + eta * direction
+        
+        def compute_curr_loss_and_arg(curr_loss):
+            f.weights = w_t
+            recorded_path.append(f.weights)
+
+            return curr_loss, recorded_path[iteration_num + 1] \
+                if curr_loss < min_loss else min_loss, best_arg
+
+        for iteration_num in range(self.max_iter_):
+            eta = self.learning_rate_.lr_step(t=iteration_num)
+            w_t = compute_curr_step(eta)
+
+            curr_step = np.linalg.norm(recorded_path[iteration_num + 1] - \
+                recorded_path[iteration_num])
+            curr_loss = f.compute_output(X=X, y=y)
+            min_loss, best_arg = compute_curr_loss_and_arg(curr_loss)
+
+            self.callback_(solver=self,
+                           weights=f.weights,
+                           val=curr_loss,
+                           grad=f.compute_jacobian(X=X, y=y),
+                           t=iteration_num,
+                           eta=eta,
+                           delta=curr_step)
+
+            if curr_step < self.tol_: 
+                break
+
+        if self.out_type_ == "average":
+            return np.mean(np.array(recorded_path))
+        if self.out_type_ == "last":
+            return recorded_path[-1]
+        if self.out_type_ == "best":
+            return best_arg
